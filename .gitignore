@@ -1,0 +1,12 @@
+# Ignore binary files
+*.exe
+*.dll
+*.so
+*.dylib
+*.bin
+*.o
+*.out
+*.class
+*.pyc
+*.jar
+*.pdb
