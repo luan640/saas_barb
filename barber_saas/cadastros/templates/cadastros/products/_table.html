@@ -1,0 +1,33 @@
+<table class="table table-hover align-middle">
+  <thead>
+    <tr>
+      <th>Nome</th><th>Tipo</th><th>Preço padrão</th><th>Compartilhado?</th><th class="text-end">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in products %}
+      <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.get_type_display }}</td>
+        <td>R$ {{ p.default_price }}</td>
+        <td>{% if p.share_across_shops %}Sim{% else %}Não{% endif %}</td>
+        <td class="text-end">
+          <a
+            class="btn btn-sm btn-outline-secondary"
+            hx-get="{% url 'cadastros:product_update' p.pk %}"
+            hx-target="#appModalContent"
+            hx-swap="innerHTML"
+          >Editar</a>
+          <a
+            class="btn btn-sm btn-outline-danger"
+            hx-get="{% url 'cadastros:product_delete' p.pk %}"
+            hx-target="#appModalContent"
+            hx-swap="innerHTML"
+          >Excluir</a>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5" class="text-center text-muted py-4">Nenhum item.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>

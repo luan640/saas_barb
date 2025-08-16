@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Lojas</h3>
+    <a
+      class="btn btn-primary"
+      hx-get="{% url 'cadastros:shop_create' %}"
+      hx-target="#appModalContent"
+      hx-swap="innerHTML"
+    >Nova loja</a>
+  </div>
+
+  <div id="shops-table">
+    {% include "cadastros/shops/_table.html" %}
+  </div>
+</div>
+{% endblock %}
