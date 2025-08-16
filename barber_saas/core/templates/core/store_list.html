@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Stores</h1>
+<a href="{% url 'core:store_create' %}">Add Store</a>
+<ul>
+  {% for store in object_list %}
+  <li>{{ store.name }}</li>
+  {% empty %}
+  <li>No stores available.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

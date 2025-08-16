@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Employees</h1>
+<a href="{% url 'core:employee_create' %}">Add Employee</a>
+<ul>
+  {% for employee in object_list %}
+  <li>{{ employee.first_name }} {{ employee.last_name }} - {{ employee.store.name }}</li>
+  {% empty %}
+  <li>No employees available.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
