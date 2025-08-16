@@ -1,6 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
+from django.template.loader import render_to_string  # <- precisa deste import
+from django.http import HttpResponse
 
 def is_htmx(request):
     return request.headers.get("HX-Request") == "true"
@@ -17,16 +19,34 @@ class OwnerQuerysetMixin(LoginRequiredMixin):
         return obj
 
 class OwnerCreateMixin(LoginRequiredMixin):
+    """
+    Para CreateView: garante que a instância inicial já tenha owner
+    antes da validação do ModelForm (que chama model.clean()).
+    Além disso, passa `owner` pro Form (TenantOwnedForm) filtrar FKs.
+    """
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # passa para o Form (ex.: TenantOwnedForm)
+        kwargs["owner"] = self.request.user
+
+        # instancia com owner ANTES da validação
+        inst = kwargs.get("instance")
+        if inst is None:
+            # CreateView normalmente passa instance=None; criamos uma já com owner
+            kwargs["instance"] = self.model(owner=self.request.user)
+        else:
+            # fallback para qualquer caso atípico
+            if getattr(inst, "owner_id", None) is None:
+                inst.owner = self.request.user
+
+        return kwargs
+
+class OwnerUpdateMixin(LoginRequiredMixin):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["owner"] = self.request.user
         return kwargs
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        if hasattr(form.instance, "owner_id") and form.instance.owner_id is None:
-            form.instance.owner = self.request.user
-        return form
 
 class HtmxCrudMixin:
     list_partial_template = None

@@ -1,16 +1,14 @@
 {% extends "base.html" %}
+{% block header %}Produtos{% endblock %}
 {% block content %}
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Produtos/Serviços</h3>
-    <a
-      class="btn btn-primary"
-      hx-get="{% url 'cadastros:product_create' %}"
-      hx-target="#appModalContent"
-      hx-swap="innerHTML"
-    >Novo</a>
+    <h3 class="m-0">Produtos</h3>
+    <a class="btn btn-primary"
+       hx-get="{% url 'cadastros:product_create' %}"
+       hx-target="#appModalContent"
+       hx-swap="innerHTML">Novo</a>
   </div>
-
   <div id="products-table">
     {% include "cadastros/products/_table.html" %}
   </div>

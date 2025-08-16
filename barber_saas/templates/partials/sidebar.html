@@ -1,0 +1,20 @@
+<nav class="nav flex-column p-3">
+  <div class="mb-3">
+    <a class="navbar-brand fw-semibold text-decoration-none" href="/">
+      💈 SaaS Salão
+    </a>
+  </div>
+
+  <span class="text-uppercase text-muted small mb-2">Cadastros</span>
+
+  <a href="{% url 'cadastros:shop_list' %}"
+     class="nav-link rounded mb-1 {% if '/cadastros/shops/' in request.path %}active{% endif %}">
+    Lojas
+  </a>
+
+  <a href="{% url 'cadastros:product_list' %}"
+     class="nav-link rounded mb-1 {% if '/cadastros/products/' in request.path %}active{% endif %}">
+    Produtos
+  </a>
+
+</nav>

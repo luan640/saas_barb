@@ -2,8 +2,9 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.shortcuts import render
 from django.contrib import messages
+from django.template.response import TemplateResponse
 
-from .mixins import OwnerQuerysetMixin, OwnerCreateMixin, HtmxCrudMixin, is_htmx
+from .mixins import OwnerQuerysetMixin, OwnerCreateMixin, HtmxCrudMixin, is_htmx, OwnerUpdateMixin
 from .models import Shop, Product
 from .forms import ShopForm, ProductForm
 
@@ -46,7 +47,7 @@ class ShopCreateView(OwnerCreateMixin, OwnerQuerysetMixin, HtmxCrudMixin, Create
         return ctx
 
 
-class ShopUpdateView(OwnerQuerysetMixin, HtmxCrudMixin, UpdateView):
+class ShopUpdateView(OwnerUpdateMixin, OwnerQuerysetMixin, HtmxCrudMixin, UpdateView):
     model = Shop
     form_class = ShopForm
     template_name = "shared/_modal_form.html"   # <<<<<<<<<<
