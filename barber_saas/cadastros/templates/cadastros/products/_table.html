@@ -1,9 +1,125 @@
+{# alvo que será trocado via OOB/HTMX #}
 <table class="table table-hover align-middle">
   <thead>
     <tr>
-      <th>Nome</th><th>Tipo</th><th>Preço padrão</th><th>Compartilhado?</th><th class="text-end">Ações</th>
+      <th>Nome</th>
+      <th>Tipo</th>
+      <th>Preço padrão</th>
+      <th>Compartilhado?</th>
+      <th class="text-end">Ações</th>
+    </tr>
+
+    {# LINHA DE FILTROS #}
+    {# Use uma linha com inputs. hx-include="#products-filters" garante que todos os campos vão na query. #}
+    <tr id="products-filters" class="table-light align-middle">
+      <th style="min-width: 220px;">
+        <input
+          type="text"
+          name="q"
+          value="{{ filters.q }}"
+          class="form-control form-control-sm"
+          placeholder="Buscar por nome/descrição"
+          hx-get="{% url 'cadastros:product_list' %}?fragment=table"
+          hx-target="#products-table"
+          hx-include="#products-filters"
+          hx-trigger="keyup changed delay:300ms"
+          hx-push-url="true"
+        >
+      </th>
+
+      <th style="min-width: 160px;">
+        <select
+          name="type"
+          class="form-select form-select-sm"
+          hx-get="{% url 'cadastros:product_list' %}?fragment=table"
+          hx-target="#products-table"
+          hx-include="#products-filters"
+          hx-trigger="change"
+          hx-push-url="true"
+        >
+          <option value="">Todos</option>
+          {# pega as choices do campo 'type' dinamicamente #}
+          {% for val, label in type_choices %}
+            <option value="{{ val }}" {% if filters.type == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </th>
+
+      <th style="min-width: 180px;">
+        <div class="d-flex gap-2">
+          <input
+            type="text"
+            name="price_min"
+            value="{{ filters.price_min }}"
+            inputmode="decimal"
+            class="form-control form-control-sm"
+            placeholder="mín."
+            hx-get="{% url 'cadastros:product_list' %}?fragment=table"
+            hx-target="#products-table"
+            hx-include="#products-filters"
+            hx-trigger="keyup changed delay:300ms"
+            hx-push-url="true"
+          >
+          <input
+            type="text"
+            name="price_max"
+            value="{{ filters.price_max }}"
+            inputmode="decimal"
+            class="form-control form-control-sm"
+            placeholder="máx."
+            hx-get="{% url 'cadastros:product_list' %}?fragment=table"
+            hx-target="#products-table"
+            hx-include="#products-filters"
+            hx-trigger="keyup changed delay:300ms"
+            hx-push-url="true"
+          >
+        </div>
+      </th>
+
+      <th style="min-width: 160px;">
+        <select
+          name="shared"
+          class="form-select form-select-sm"
+          hx-get="{% url 'cadastros:product_list' %}?fragment=table"
+          hx-target="#products-table"
+          hx-include="#products-filters"
+          hx-trigger="change"
+          hx-push-url="true"
+        >
+          <option value="" {% if not filters.shared %}selected{% endif %}>Todos</option>
+          <option value="1" {% if filters.shared == "1" %}selected{% endif %}>Sim</option>
+          <option value="0" {% if filters.shared == "0" %}selected{% endif %}>Não</option>
+        </select>
+      </th>
+
+      <th class="text-end">
+        <div class="d-flex justify-content-end gap-2">
+          <select
+            name="active"
+            class="form-select form-select-sm"
+            style="max-width: 120px;"
+            hx-get="{% url 'cadastros:product_list' %}?fragment=table"
+            hx-target="#products-table"
+            hx-include="#products-filters"
+            hx-trigger="change"
+            hx-push-url="true"
+          >
+            <option value="" {% if not filters.active %}selected{% endif %}>Todos</option>
+            <option value="1" {% if filters.active == "1" %}selected{% endif %}>Ativos</option>
+            <option value="0" {% if filters.active == "0" %}selected{% endif %}>Inativos</option>
+          </select>
+
+          <a
+            class="btn btn-sm btn-outline-secondary"
+            hx-get="{% url 'cadastros:product_list' %}?fragment=table"
+            hx-target="#products-table"
+            hx-push-url="true"
+          >Limpar</a>
+        </div>
+      </th>
     </tr>
   </thead>
+
   <tbody>
     {% for p in products %}
       <tr>
@@ -12,22 +128,45 @@
         <td>R$ {{ p.default_price }}</td>
         <td>{% if p.share_across_shops %}Sim{% else %}Não{% endif %}</td>
         <td class="text-end">
-          <a
-            class="btn btn-sm btn-outline-secondary"
-            hx-get="{% url 'cadastros:product_update' p.pk %}"
-            hx-target="#appModalContent"
-            hx-swap="innerHTML"
-          >Editar</a>
-          <a
-            class="btn btn-sm btn-outline-danger"
+          <a class="btn btn-sm btn-outline-secondary"
+             hx-get="{% url 'cadastros:product_update' p.pk %}"
+             hx-target="#appModalContent"
+             hx-swap="innerHTML">Editar</a>
+          <a class="btn btn-sm btn-outline-danger"
             hx-get="{% url 'cadastros:product_delete' p.pk %}"
             hx-target="#appModalContent"
-            hx-swap="innerHTML"
-          >Excluir</a>
+            hx-swap="innerHTML">Excluir</a>
         </td>
       </tr>
     {% empty %}
-      <tr><td colspan="5" class="text-center text-muted py-4">Nenhum item.</td></tr>
+      <tr><td colspan="5" class="text-center text-muted py-4">Nenhum item encontrado.</td></tr>
     {% endfor %}
   </tbody>
 </table>
+
+{# paginação opcional, mantendo filtros na URL #}
+{% if is_paginated %}
+  <nav class="d-flex justify-content-end">
+    <ul class="pagination pagination-sm my-2">
+      {% with q=request.GET.urlencode %}
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link"
+               hx-get="{% url 'cadastros:product_list' %}?fragment=table&page={{ page_obj.previous_page_number }}&{{ q }}"
+               hx-target="#products-table"
+               hx-push-url="true">«</a>
+          </li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">pág. {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link"
+               hx-get="{% url 'cadastros:product_list' %}?fragment=table&page={{ page_obj.next_page_number }}&{{ q }}"
+               hx-target="#products-table"
+               hx-push-url="true">»</a>
+          </li>
+        {% endif %}
+      {% endwith %}
+    </ul>
+  </nav>
+{% endif %}

@@ -1,17 +1,19 @@
 <div class="modal-header">
-  <h5 class="modal-title">Confirma excluir?</h5>
+  <h5 class="modal-title">{{ title|default:"Confirmar exclusão" }}</h5>
   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
+
 <div class="modal-body">
-  <p>Esta ação não pode ser desfeita.</p>
-  <form
-    method="post"
-    hx-post="{{ request.path }}"
-    hx-target="{{ table_dom_id }}"
-    hx-swap="outerHTML"
-  >
+  <p>Tem certeza que deseja excluir <strong>{{ object }}</strong>?</p>
+  <form method="post"
+        hx-post="{{ request.path }}"
+        hx-target="#appModalContent"
+        hx-swap="none"
+        hx-on::after-request="if (event.detail.successful) { document.body.dispatchEvent(new CustomEvent('closeModal')); }">
     {% csrf_token %}
-    <button class="btn btn-danger" type="submit">Excluir</button>
-    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-danger">Excluir</button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    </div>
   </form>
 </div>

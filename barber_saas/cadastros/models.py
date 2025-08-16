@@ -5,44 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
-
-# ===== Mixins base =====
-class UUIDModel(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    class Meta:
-        abstract = True
-
-class TimeStampedModel(models.Model):
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(auto_now=True)
-    class Meta:
-        abstract = True
-
-class TenantQuerySet(models.QuerySet):
-    def for_user(self, user):
-        return self.filter(owner=user)
-
-class TenantOwnedModel(UUIDModel, TimeStampedModel):
-    """
-    Todo registro pertence a um 'owner' (usuário/tenant).
-    """
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="%(class)ss",
-    )
-
-    objects = TenantQuerySet.as_manager()
-
-    class Meta:
-        abstract = True
-        indexes = [models.Index(fields=["owner"])]
-
-    def clean(self):
-        super().clean()
-        if not self.owner_id:
-            raise ValidationError("Defina 'owner' (tenant) no objeto.")
-
+from core.models import TenantOwnedModel, UUIDModel, TimeStampedModel, TenantQuerySet
 
 # ===== Domínio =====
 class Shop(TenantOwnedModel):
@@ -59,6 +22,35 @@ class Shop(TenantOwnedModel):
         return f"{self.name}"
 
 
+class Staff(TenantOwnedModel):
+    """
+    Perfil de funcionário por tenant (owner).
+    Um mesmo 'user' pode ter perfis diferentes em tenants diferentes.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="staff_profiles",
+    )
+    full_name = models.CharField(max_length=150, blank=True)
+    phone = models.CharField(max_length=32, blank=True)
+    document = models.CharField(max_length=20, blank=True)  # CPF/CNPJ
+    birth_date = models.DateField(null=True, blank=True)
+    address = models.CharField(max_length=255, blank=True)
+
+    hire_date = models.DateField(null=True, blank=True)
+    commission_percent = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    is_active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = [("owner", "user")]  # 1 perfil por (tenant, user)
+        indexes = [models.Index(fields=["owner", "is_active"])]
+
+    def __str__(self):
+        return self.full_name or getattr(self.user, "email", str(self.pk))
+
+
 class StaffMembership(TenantOwnedModel):
     ROLE_OWNER = "owner"
     ROLE_MANAGER = "manager"
@@ -69,27 +61,43 @@ class StaffMembership(TenantOwnedModel):
         (ROLE_STAFF, "Staff"),
     )
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="memberships",
-    )
-    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name="memberships")
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name="memberships")
+    shop = models.ForeignKey("cadastros.Shop", on_delete=models.CASCADE, related_name="memberships")
     role = models.CharField(max_length=16, choices=ROLE_CHOICES, default=ROLE_STAFF)
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        unique_together = [("user", "shop")]
+        unique_together = [("staff", "shop")]
         indexes = [models.Index(fields=["shop", "role", "is_active"])]
 
     def clean(self):
         super().clean()
-        # Garante que o membership pertence ao mesmo owner da loja
-        if self.shop and self.owner_id and self.shop.owner_id != self.owner_id:
-            raise ValidationError("Membership.owner deve ser o mesmo owner da Shop.")
+        # compare por *_id para não disparar a carga do related quando None
+        if self.shop_id and self.owner_id:
+            # self.shop é seguro aqui (shop_id existe), mas guardamos mesmo assim
+            if getattr(self.shop, "owner_id", None) != self.owner_id:
+                raise ValidationError("Membership.owner deve ser o mesmo owner da Shop.")
+
+        if self.staff_id and self.owner_id:
+            # idem: só acessa staff se staff_id existir
+            if getattr(self.staff, "owner_id", None) != self.owner_id:
+                raise ValidationError("Membership.owner deve ser o mesmo owner do Staff.")
 
     def __str__(self):
-        return f"{self.user} @ {self.shop} ({self.role})"
+        # não force acesso ao related quando o FK ainda não foi setado
+        staff_name = ""
+        if getattr(self, "staff_id", None):
+            try:
+                staff_name = self.staff.full_name or self.staff.user.email
+            except Exception:
+                staff_name = ""
+        shop_name = ""
+        if getattr(self, "shop_id", None):
+            try:
+                shop_name = self.shop.name
+            except Exception:
+                shop_name = ""
+        return f"{staff_name} @ {shop_name} ({self.role})"
 
 
 class Product(TenantOwnedModel):
@@ -141,3 +149,21 @@ class ProductPrice(TenantOwnedModel):
 
     def __str__(self):
         return f"{self.product} @ {self.shop}: {self.price}"
+
+
+class Client(TenantOwnedModel):
+    name = models.CharField(max_length=150)
+    phone = models.CharField(max_length=32, blank=True)
+    is_active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ("name",)
+        unique_together = [("owner", "phone")]  # evita duplicar telefone dentro do tenant
+        indexes = [
+            models.Index(fields=["owner", "name"]),
+            models.Index(fields=["owner", "phone"]),
+        ]
+
+    def __str__(self):
+        return self.name

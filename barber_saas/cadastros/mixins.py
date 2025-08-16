@@ -47,6 +47,19 @@ class OwnerUpdateMixin(LoginRequiredMixin):
         kwargs["owner"] = self.request.user
         return kwargs
 
+class CurrentShopMixin:
+    """
+    Lê a loja atual de ?shop=<uuid> ou da sessão.
+    Guarda em self.current_shop_id e self.current_shop (opcional).
+    """
+    session_key = "current_shop_id"
+
+    def dispatch(self, request, *args, **kwargs):
+        shop_id = request.GET.get("shop") or request.session.get(self.session_key)
+        if shop_id:
+            request.session[self.session_key] = str(shop_id)
+        self.current_shop_id = request.session.get(self.session_key)
+        return super().dispatch(request, *args, **kwargs)
 
 class HtmxCrudMixin:
     list_partial_template = None

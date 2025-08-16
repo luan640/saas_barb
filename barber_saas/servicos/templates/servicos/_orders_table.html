@@ -1,0 +1,39 @@
+<table class="table table-hover align-middle">
+  <thead>
+    <tr>
+      <th>Cliente</th>
+      <th>Loja</th>
+      <th>Profissional</th>
+      <th>Status</th>
+      <th class="text-end">Total</th>
+      <th class="text-end">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for o in orders %}
+      <tr>
+        <td>
+          {% if o.client_id %}
+            {{ o.client.name }}
+            {% if o.client.phone %}<div class="text-muted small">{{ o.client.phone }}</div>{% endif %}
+          {% else %}
+            {{ o.customer_name|default:"—" }}
+            {% if o.customer_phone %}<div class="text-muted small">{{ o.customer_phone }}</div>{% endif %}
+          {% endif %}
+        </td>
+        <td>{{ o.shop.name }}</td>
+        <td>{{ o.staff|default:"—" }}</td>
+        <td>{{ o.get_status_display }}</td>
+        <td class="text-end">R$ {{ o.total_amount }}</td>
+        <td class="text-end">
+          <a class="btn btn-sm btn-outline-secondary"
+             hx-get="{% url 'servicos:order_update' o.pk %}"
+             hx-target="#appModalContent"
+             hx-swap="innerHTML">Editar</a>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="text-center text-muted py-4">Nenhuma comanda.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>

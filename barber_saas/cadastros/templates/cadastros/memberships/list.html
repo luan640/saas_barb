@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block header %}Funcionários / Membros{% endblock %}
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">Membros</h3>
+
+    <div class="d-flex gap-2">
+      <!-- Botão para criar novo membro (abre modal) -->
+      <a class="btn btn-primary"
+        hx-get="{% url 'cadastros:membership_create' %}{% if request.session.current_shop_id %}?shop={{ request.session.current_shop_id }}{% endif %}"
+        hx-target="#appModalContent"
+        hx-swap="innerHTML">
+        Novo membro
+      </a>
+    </div>
+  </div>
+
+  <!-- Tabela (substituída via OOB nos saves) -->
+  <div id="memberships-table">
+    {% include "cadastros/memberships/_table.html" %}
+  </div>
+
+  <div class="text-muted small mt-3">
+    {% if request.session.current_shop_id %}
+      Listando membros da <em>loja atual</em>. Para ver de outra loja, troque a loja no seu fluxo.
+    {% else %}
+      Dica: selecione uma <em>loja atual</em> para filtrar os membros dessa loja.
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

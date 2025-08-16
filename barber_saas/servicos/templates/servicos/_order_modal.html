@@ -1,0 +1,71 @@
+<div class="modal-header">
+  <h5 class="modal-title">{{ title }}</h5>
+  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="modal-body">
+  <form method="post"
+        hx-post="{{ request.path }}"
+        hx-target="#appModalContent"
+        hx-swap="innerHTML">
+    {% csrf_token %}
+
+    <div class="row g-3">
+      <div class="col-md-6">{{ form.shop.label_tag }}{{ form.shop }}</div>
+      <div class="col-md-6">{{ form.client.label_tag }}{{ form.client }}</div>
+
+      <div class="col-md-6">{{ form.staff.label_tag }}{{ form.staff }}</div>
+      <div class="col-md-6">{{ form.scheduled_for.label_tag }}{{ form.scheduled_for }}</div>
+
+      <div class="col-md-6">{{ form.status.label_tag }}{{ form.status }}</div>
+      <div class="col-md-6">{{ form.payment_method.label_tag }}{{ form.payment_method }}</div>
+
+      <div class="col-md-6">{{ form.amount_paid.label_tag }}{{ form.amount_paid }}</div>
+      <div class="col-md-6">{{ form.discount_amount.label_tag }}{{ form.discount_amount }}</div>
+
+      <div class="col-12">{{ form.notes.label_tag }}{{ form.notes }}</div>
+    </div>
+
+    <hr class="my-3">
+    {# ... formset de itens permanece igual ... #}
+    {{ formset.management_form }}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th style="width:45%">Produto/Serviço</th>
+            <th style="width:15%">Qtd</th>
+            <th style="width:20%">Preço unit.</th>
+            <th style="width:10%">Remover</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in formset.forms %}
+            <tr>
+              <td>{{ f.product }}</td>
+              <td>{{ f.qty }}</td>
+              <td>{{ f.unit_price }}</td>
+              <td class="text-center">
+                {% if f.instance.pk %}
+                  <label class="form-check">
+                    {{ f.DELETE }} <span class="small">Apagar</span>
+                  </label>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <a class="btn btn-outline-secondary"
+         hx-get="{% url 'cadastros:client_create' %}"
+         hx-target="#appModalContent"
+         hx-swap="innerHTML">Novo cliente</a>
+      <button type="submit" class="btn btn-primary">Salvar</button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    </div>
+  </form>
+</div>
+

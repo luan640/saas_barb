@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block header %}Clientes{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">Clientes</h3>
+    <a class="btn btn-primary"
+       hx-get="{% url 'cadastros:client_create' %}"
+       hx-target="#appModalContent"
+       hx-swap="innerHTML">
+      Novo cliente
+    </a>
+  </div>
+
+  <div class="mb-3">
+    <input class="form-control" placeholder="Buscar por nome ou telefone..."
+        name="q"
+        hx-get="{% url 'cadastros:client_list' %}?fragment=table"
+        hx-target="#clients-table"
+        hx-trigger="keyup changed delay:300ms">
+  </div>
+
+  <div id="clients-table"
+        hx-get="{% url 'cadastros:client_list' %}?fragment=table{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+        hx-trigger="refreshClientsTable from:body"
+        hx-target="#clients-table"
+        hx-swap="innerHTML">
+    {% include "cadastros/clients/_table.html" %}
+  </div>
+</div>
+{% endblock %}

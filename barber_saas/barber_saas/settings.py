@@ -19,7 +19,9 @@ INSTALLED_APPS = [
 
     # apps
     'accounts',
-    'cadastros'
+    'cadastros',
+    'core',
+    'servicos'
 ]
 
 MIDDLEWARE = [

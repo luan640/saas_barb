@@ -1,0 +1,26 @@
+<div class="row g-3">
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Faturado hoje</div>
+        <div class="fs-4">R$ {{ kpis.faturado_hoje|default:0 }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Agendamentos hoje</div>
+        <div class="fs-4">{{ kpis.agendados_hoje|default:0 }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Em andamento</div>
+        <div class="fs-4">{{ kpis.em_andamento|default:0 }}</div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -7,8 +7,10 @@
     method="post"
     hx-post="{{ request.path }}"
     hx-target="#appModalContent"   
-    hx-swap="innerHTML"            
-  >
+    hx-swap="innerHTML" 
+    {% if refresh_event %}
+      hx-on::after-request="if (event.detail.successful) { document.body.dispatchEvent(new CustomEvent('closeModal')); document.body.dispatchEvent(new CustomEvent('{{ refresh_event }}')); }"
+    {% endif %}>
     {% csrf_token %}
     {% if form.non_field_errors %}
       <div class="alert alert-danger">{{ form.non_field_errors }}</div>
