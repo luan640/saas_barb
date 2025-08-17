@@ -7,7 +7,11 @@ from django.template.loader import render_to_string  # <- precisa deste import
 from django.http import HttpResponse
 
 def is_htmx(request):
-    return request.headers.get("HX-Request") == "true"
+    """Return True if the request comes from HTMX."""
+    return (
+        request.headers.get("HX-Request") == "true"
+        or request.META.get("HTTP_HX_REQUEST") == "true"
+    )
 
 class OwnerQuerysetMixin(LoginRequiredMixin):
     def get_queryset(self):
