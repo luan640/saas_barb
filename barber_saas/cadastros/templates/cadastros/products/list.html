@@ -9,7 +9,11 @@
        hx-target="#appModalContent"
        hx-swap="innerHTML">Novo</a>
   </div>
-  <div id="products-table">
+  <div id="products-table"
+       hx-get="{% url 'cadastros:product_list' %}?fragment=table{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}"
+       hx-trigger="refreshProductsTable from:body"
+       hx-target="#products-table"
+       hx-swap="innerHTML">
     {% include "cadastros/products/_table.html" %}
   </div>
 </div>

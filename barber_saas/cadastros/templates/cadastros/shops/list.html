@@ -9,7 +9,11 @@
        hx-target="#appModalContent"
        hx-swap="innerHTML">Nova loja</a>
   </div>
-  <div id="shops-table">
+  <div id="shops-table"
+       hx-get="{% url 'cadastros:shop_list' %}?fragment=table"
+       hx-trigger="refreshShopsTable from:body"
+       hx-target="#shops-table"
+       hx-swap="innerHTML">
     {% include "cadastros/shops/_table.html" %}
   </div>
 </div>

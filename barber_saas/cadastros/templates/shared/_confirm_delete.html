@@ -9,7 +9,7 @@
         hx-post="{{ request.path }}"
         hx-target="#appModalContent"
         hx-swap="none"
-        hx-on::after-request="if (event.detail.successful) { document.body.dispatchEvent(new CustomEvent('closeModal')); }">
+        hx-on::after-request="if (event.detail.successful) { document.body.dispatchEvent(new CustomEvent('closeModal')); {% if refresh_event %}document.body.dispatchEvent(new CustomEvent('{{ refresh_event }}'));{% endif %} }">
     {% csrf_token %}
     <div class="d-flex gap-2">
       <button type="submit" class="btn btn-danger">Excluir</button>

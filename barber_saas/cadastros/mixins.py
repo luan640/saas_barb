@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
@@ -66,6 +68,7 @@ class HtmxCrudMixin:
     list_context_name = None
     table_dom_id = None
     modal_form_template = "shared/_modal_form.html"
+    refresh_event = None
 
     def render_modal(self, context, status=200):
         return render(self.request, self.modal_form_template, context=context, status=status)
@@ -92,7 +95,10 @@ class HtmxCrudMixin:
             oob_html = f'<div id="{div_id}" hx-swap-oob="outerHTML">{table_html}</div>'
 
             resp = HttpResponse(oob_html)
-            resp["HX-Trigger"] = "closeModal"
+            triggers = {"closeModal": True}
+            if self.refresh_event:
+                triggers[self.refresh_event] = True
+            resp["HX-Trigger"] = json.dumps(triggers)
             return resp
 
         return super().form_valid(form)
