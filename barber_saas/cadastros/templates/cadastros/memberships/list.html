@@ -17,8 +17,12 @@
     </div>
   </div>
 
-  <!-- Tabela (substituída via OOB nos saves) -->
-  <div id="memberships-table">
+  <!-- Tabela -->
+  <div id="memberships-table"
+       hx-get="{% url 'cadastros:membership_list' %}?fragment=table{% if request.session.current_shop_id %}&shop={{ request.session.current_shop_id }}{% endif %}"
+       hx-trigger="refreshMembershipsTable from:body"
+       hx-target="#memberships-table"
+       hx-swap="innerHTML">
     {% include "cadastros/memberships/_table.html" %}
   </div>
 

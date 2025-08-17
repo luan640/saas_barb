@@ -1,8 +1,12 @@
+import json
+from decimal import Decimal, InvalidOperation
+
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.template.response import TemplateResponse
+from django.template.loader import render_to_string
 from django.db.models import Q
 from django.http import HttpResponse
 
@@ -35,6 +39,7 @@ class ShopCreateView(OwnerCreateMixin, OwnerQuerysetMixin, HtmxCrudMixin, Create
     list_partial_template = "cadastros/shops/_table.html"
     list_context_name = "shops"
     table_dom_id = "#shops-table"
+    refresh_event = "refreshShopsTable"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -44,7 +49,11 @@ class ShopCreateView(OwnerCreateMixin, OwnerQuerysetMixin, HtmxCrudMixin, Create
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         if is_htmx(self.request):
-            ctx.update({"title": self.modal_title, "table_dom_id": self.table_dom_id})
+            ctx.update({
+                "title": self.modal_title,
+                "table_dom_id": self.table_dom_id,
+                "refresh_event": self.refresh_event,
+            })
         return ctx
 
 
@@ -56,6 +65,7 @@ class ShopUpdateView(OwnerUpdateMixin, OwnerQuerysetMixin, HtmxCrudMixin, Update
     list_partial_template = "cadastros/shops/_table.html"
     list_context_name = "shops"
     table_dom_id = "#shops-table"
+    refresh_event = "refreshShopsTable"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -65,7 +75,11 @@ class ShopUpdateView(OwnerUpdateMixin, OwnerQuerysetMixin, HtmxCrudMixin, Update
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         if is_htmx(self.request):
-            ctx.update({"title": self.modal_title, "table_dom_id": self.table_dom_id})
+            ctx.update({
+                "title": self.modal_title,
+                "table_dom_id": self.table_dom_id,
+                "refresh_event": self.refresh_event,
+            })
         return ctx
 
 
@@ -78,15 +92,15 @@ class ShopDeleteView(OwnerQuerysetMixin, DeleteView):
         return TemplateResponse(request, "shared/_confirm_delete.html", {
             "object": self.object,
             "table_dom_id": "#shops-table",
+            "refresh_event": "refreshShopsTable",
         })
 
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
         obj.delete()
-        qs = Shop.objects.filter(owner=request.user)
-        response = render(request, "cadastros/shops/_table.html", {"shops": qs})
-        response["HX-Trigger"] = "closeModal"
-        return response
+        resp = HttpResponse("")
+        resp["HX-Trigger"] = json.dumps({"closeModal": True, "refreshShopsTable": True})
+        return resp
 
 
 # =============== PRODUCTS ===============
@@ -161,6 +175,7 @@ class ProductCreateView(OwnerCreateMixin, OwnerQuerysetMixin, HtmxCrudMixin, Cre
     list_partial_template = "cadastros/products/_table.html"
     list_context_name = "products"
     table_dom_id = "#products-table"
+    refresh_event = "refreshProductsTable"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -170,7 +185,11 @@ class ProductCreateView(OwnerCreateMixin, OwnerQuerysetMixin, HtmxCrudMixin, Cre
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         if is_htmx(self.request):
-            ctx.update({"title": self.modal_title, "table_dom_id": self.table_dom_id})
+            ctx.update({
+                "title": self.modal_title,
+                "table_dom_id": self.table_dom_id,
+                "refresh_event": self.refresh_event,
+            })
         return ctx
 
 
@@ -182,6 +201,7 @@ class ProductUpdateView(OwnerQuerysetMixin, HtmxCrudMixin, UpdateView):
     list_partial_template = "cadastros/products/_table.html"
     list_context_name = "products"
     table_dom_id = "#products-table"
+    refresh_event = "refreshProductsTable"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -191,7 +211,11 @@ class ProductUpdateView(OwnerQuerysetMixin, HtmxCrudMixin, UpdateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         if is_htmx(self.request):
-            ctx.update({"title": self.modal_title, "table_dom_id": self.table_dom_id})
+            ctx.update({
+                "title": self.modal_title,
+                "table_dom_id": self.table_dom_id,
+                "refresh_event": self.refresh_event,
+            })
         return ctx
 
 
@@ -206,7 +230,7 @@ class ProductDeleteView(OwnerQuerysetMixin, DeleteView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx.update({"title": self.modal_title})
+        ctx.update({"title": self.modal_title, "refresh_event": "refreshProductsTable"})
         return ctx
 
     def delete(self, request, *args, **kwargs):
@@ -226,10 +250,7 @@ class ProductDeleteView(OwnerQuerysetMixin, DeleteView):
             oob_html = f'<div id="{div_id}" hx-swap-oob="outerHTML">{table_html}</div>'
 
             resp = HttpResponse(oob_html)
-            # Dispara eventos em diferentes fases (belt & suspenders)
-            resp["HX-Trigger"] = '{"closeModal": true, "toast": "Excluído."}'
-            resp["HX-Trigger-After-Swap"] = "closeModal"
-            resp["HX-Trigger-After-Settle"] = "closeModal"
+            resp["HX-Trigger"] = json.dumps({"closeModal": True, "refreshProductsTable": True, "toast": "Excluído."})
             return resp
 
         # Fallback SSR
@@ -248,6 +269,12 @@ class MembershipListView(OwnerQuerysetMixin, CurrentShopMixin, ListView):
             qs = qs.filter(shop_id=self.current_shop_id)
         return qs
 
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        if is_htmx(request) and request.GET.get("fragment") == "table":
+            return render(request, "cadastros/memberships/_table.html", {"memberships": self.object_list})
+        return response
+
 
 class MembershipCreateView(OwnerCreateMixin, OwnerQuerysetMixin, HtmxCrudMixin, CreateView):
     model = StaffMembership
@@ -257,10 +284,13 @@ class MembershipCreateView(OwnerCreateMixin, OwnerQuerysetMixin, HtmxCrudMixin, 
     list_partial_template = "cadastros/memberships/_table.html"
     list_context_name = "memberships"
     table_dom_id = "#memberships-table"
+    refresh_event = "refreshMembershipsTable"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx.update({"title": self.modal_title})
+        if is_htmx(self.request):
+            ctx.update({"refresh_event": self.refresh_event, "table_dom_id": self.table_dom_id})
         return ctx
 
     def get_initial(self):
@@ -279,6 +309,7 @@ class MembershipUpdateView(OwnerQuerysetMixin, HtmxCrudMixin, UpdateView):
     list_partial_template = "cadastros/memberships/_table.html"
     list_context_name = "memberships"
     table_dom_id = "#memberships-table"
+    refresh_event = "refreshMembershipsTable"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -286,6 +317,16 @@ class MembershipUpdateView(OwnerQuerysetMixin, HtmxCrudMixin, UpdateView):
         # mantém o user já vinculado ao registro (não troca para o request.user à força)
         # kwargs["current_user"] = self.get_object().user
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        if is_htmx(self.request):
+            ctx.update({
+                "title": self.modal_title,
+                "table_dom_id": self.table_dom_id,
+                "refresh_event": self.refresh_event,
+            })
+        return ctx
 
 
 class MembershipDeleteView(OwnerQuerysetMixin, CurrentShopMixin, DeleteView):
@@ -297,6 +338,21 @@ class MembershipDeleteView(OwnerQuerysetMixin, CurrentShopMixin, DeleteView):
         if self.current_shop_id:
             url += f"?shop={self.current_shop_id}"
         return url
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["refresh_event"] = "refreshMembershipsTable"
+        ctx["title"] = "Excluir vínculo"
+        return ctx
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
+        if is_htmx(request):
+            resp = HttpResponse("")
+            resp["HX-Trigger"] = json.dumps({"closeModal": True, "refreshMembershipsTable": True})
+            return resp
+        return redirect(self.get_success_url())
 
 # ============= STAFFS =========
 
