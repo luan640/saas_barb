@@ -1,4 +1,5 @@
 from decimal import Decimal
+import json
 
 from django.contrib.auth import get_user_model
 
@@ -71,5 +72,12 @@ class CommaDecimalFieldFormTests(TestCase):
         )
         form = ServiceItemForm(instance=item, owner=self.owner)
         self.assertEqual(form.initial["unit_price"], "2,25")
+
+    def test_service_item_form_exposes_price_mapping(self):
+        form = ServiceItemForm(owner=self.owner)
+        data_attr = form.fields["product"].widget.attrs.get("data-prices", "{}")
+        prices = json.loads(data_attr)
+        self.assertIn(str(self.product.pk), prices)
+        self.assertEqual(prices[str(self.product.pk)], str(self.product.default_price))
 
 

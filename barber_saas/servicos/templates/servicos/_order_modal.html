@@ -75,3 +75,19 @@
   </form>
 </div>
 
+<script>
+  // Preenche o campo de preço unitário ao selecionar um produto.
+  document.addEventListener('change', function (e) {
+    if (e.target.matches('select[name$="-product"]')) {
+      const select = e.target;
+      const prices = JSON.parse(select.dataset.prices || '{}');
+      const price = prices[select.value] || '';
+      const row = select.closest('tr');
+      const input = row ? row.querySelector('input[name$="-unit_price"]') : null;
+      if (input) {
+        input.value = price.toString().replace('.', ',');
+      }
+    }
+  });
+</script>
+
