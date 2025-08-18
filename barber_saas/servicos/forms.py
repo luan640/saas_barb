@@ -95,6 +95,14 @@ class OwnerInlineFormSet(BaseInlineFormSet):
         kwargs.setdefault("current_user", self._current_user)
         return super()._construct_form(i, **kwargs)
 
+    def save_new(self, form, commit=True):
+        obj = super().save_new(form, commit=False)
+        if self._owner:
+            obj.owner = self._owner
+        if commit:
+            obj.save()
+        return obj
+
 ServiceItemFormSet = inlineformset_factory(
     ServiceOrder, ServiceItem,
     form=ServiceItemForm,
