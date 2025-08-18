@@ -85,7 +85,7 @@
       const row = select.closest('tr');
       const input = row ? row.querySelector('input[name$="-unit_price"]') : null;
       if (input) {
-        input.value = price.toString().replace('.', ',');
+        input.value = price.toString();
       }
     }
   });
