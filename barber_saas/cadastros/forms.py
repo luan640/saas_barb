@@ -27,10 +27,22 @@ class BootstrapModelForm(forms.ModelForm):
 # NOVO: base para forms que “pertencem” ao tenant
 class TenantOwnedForm(BootstrapModelForm):
     def __init__(self, *args, owner=None, **kwargs):
-        owner = kwargs.pop("owner", None)                # <- tira antes do super()
-        self.current_user = kwargs.pop("current_user", None)  # <- opcional p/ quem usar
+        """Inject ``owner`` into the instance before validation.
+
+        ``owner`` may come either as an explicit keyword argument or inside
+        ``kwargs`` (for backwards compatibility).  Previous code attempted to
+        pop the value from ``kwargs`` which resulted in the parameter being
+        lost, leaving ``instance.owner`` unset and causing the validation error
+        ``"Defina 'owner' (tenant) no objeto."`` when saving forms.
+        """
+
+        # Accept ``owner`` passed either positionally or inside ``kwargs``
+        owner = kwargs.pop("owner", owner)
+        self.current_user = kwargs.pop("current_user", None)  # optional
+
         super().__init__(*args, **kwargs)
-        # injeta o owner ANTES da validação do ModelForm
+
+        # Ensure the instance already has the owner before model validation
         if owner and getattr(self.instance, "owner_id", None) is None:
             self.instance.owner = owner
 

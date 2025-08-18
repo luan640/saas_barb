@@ -1,3 +1,5 @@
+import json
+
 from django import forms
 from django.forms import inlineformset_factory
 from cadastros.models import Shop, Product, Staff
@@ -72,6 +74,11 @@ class ServiceItemForm(TenantOwnedForm):
             qs = Product.objects.none()
 
         self.fields["product"].queryset = qs
+
+        # Map product IDs to their default prices so the frontend can
+        # automatically fill the unit price when a product is chosen.
+        prices = {str(p.pk): str(p.default_price) for p in qs}
+        self.fields["product"].widget.attrs["data-prices"] = json.dumps(prices)
 
         val = self.initial.get("unit_price")
         if val not in (None, ""):
