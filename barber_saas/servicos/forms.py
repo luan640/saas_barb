@@ -2,7 +2,10 @@ from django import forms
 from django.forms import inlineformset_factory
 from cadastros.models import Shop, Product, Staff
 from .models import ServiceOrder, ServiceItem, Client
-from cadastros.forms import TenantOwnedForm  # sua base que injeta owner/current_user
+from cadastros.forms import (
+    TenantOwnedForm,
+    CommaDecimalField,
+)  # sua base que injeta owner/current_user
 from django.forms.models import BaseInlineFormSet  # <- importante
 
 class ServiceOrderForm(TenantOwnedForm):
@@ -32,6 +35,8 @@ class ServiceOrderForm(TenantOwnedForm):
         return obj
 
 class ServiceItemForm(TenantOwnedForm):
+    unit_price = CommaDecimalField(required=False, min_value=0)
+
     class Meta:
         model = ServiceItem
         fields = ["product", "qty", "unit_price"]
