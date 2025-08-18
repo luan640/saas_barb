@@ -2,10 +2,15 @@ from django import forms
 from django.forms import inlineformset_factory
 from cadastros.models import Shop, Product, Staff
 from .models import ServiceOrder, ServiceItem, Client
-from cadastros.forms import TenantOwnedForm  # sua base que injeta owner/current_user
+from cadastros.forms import (
+    TenantOwnedForm,
+    CommaDecimalField,
+)  # sua base que injeta owner/current_user
 from django.forms.models import BaseInlineFormSet  # <- importante
 
 class ServiceOrderForm(TenantOwnedForm):
+    amount_paid = CommaDecimalField(required=False)
+    discount_amount = CommaDecimalField(required=False)
     class Meta:
         model = ServiceOrder
         fields = [
@@ -23,6 +28,11 @@ class ServiceOrderForm(TenantOwnedForm):
         if not self.instance.pk:
             self.fields["status"].initial = ServiceOrder.STATUS_IN_PROGRESS
 
+        for name in ("amount_paid", "discount_amount"):
+            val = self.initial.get(name)
+            if val not in (None, ""):
+                self.initial[name] = str(val).replace(".", ",")
+
     def save(self, commit=True):
         obj = super().save(commit=False)
         # sempre sincroniza nome/telefone do cliente selecionado
@@ -32,6 +42,8 @@ class ServiceOrderForm(TenantOwnedForm):
         return obj
 
 class ServiceItemForm(TenantOwnedForm):
+    unit_price = CommaDecimalField(required=False)
+
     class Meta:
         model = ServiceItem
         fields = ["product", "qty", "unit_price"]
@@ -59,6 +71,10 @@ class ServiceItemForm(TenantOwnedForm):
             qs = Product.objects.none()
 
         self.fields["product"].queryset = qs
+
+        val = self.initial.get("unit_price")
+        if val not in (None, ""):
+            self.initial["unit_price"] = str(val).replace(".", ",")
 
 class OwnerInlineFormSet(BaseInlineFormSet):
     def __init__(self, *args, owner=None, current_user=None, **kwargs):
