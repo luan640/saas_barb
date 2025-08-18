@@ -44,6 +44,7 @@ class ServiceOrderForm(TenantOwnedForm):
 class ServiceItemForm(TenantOwnedForm):
     unit_price = CommaDecimalField(required=False)
 
+
     class Meta:
         model = ServiceItem
         fields = ["product", "qty", "unit_price"]

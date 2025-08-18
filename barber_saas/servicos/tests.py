@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+
 from django.test import TestCase
 
 from cadastros.models import Shop, Staff, Client, Product
@@ -70,4 +71,5 @@ class CommaDecimalFieldFormTests(TestCase):
         )
         form = ServiceItemForm(instance=item, owner=self.owner)
         self.assertEqual(form.initial["unit_price"], "2,25")
+
 

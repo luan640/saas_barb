@@ -10,25 +10,28 @@
         hx-swap="innerHTML">
     {% csrf_token %}
 
+    {{ form.non_field_errors }}
+
     <div class="row g-3">
-      <div class="col-md-6">{{ form.shop.label_tag }}{{ form.shop }}</div>
-      <div class="col-md-6">{{ form.client.label_tag }}{{ form.client }}</div>
+      <div class="col-md-6">{{ form.shop.label_tag }}{{ form.shop }}{{ form.shop.errors }}</div>
+      <div class="col-md-6">{{ form.client.label_tag }}{{ form.client }}{{ form.client.errors }}</div>
 
-      <div class="col-md-6">{{ form.staff.label_tag }}{{ form.staff }}</div>
-      <div class="col-md-6">{{ form.scheduled_for.label_tag }}{{ form.scheduled_for }}</div>
+      <div class="col-md-6">{{ form.staff.label_tag }}{{ form.staff }}{{ form.staff.errors }}</div>
+      <div class="col-md-6">{{ form.scheduled_for.label_tag }}{{ form.scheduled_for }}{{ form.scheduled_for.errors }}</div>
 
-      <div class="col-md-6">{{ form.status.label_tag }}{{ form.status }}</div>
-      <div class="col-md-6">{{ form.payment_method.label_tag }}{{ form.payment_method }}</div>
+      <div class="col-md-6">{{ form.status.label_tag }}{{ form.status }}{{ form.status.errors }}</div>
+      <div class="col-md-6">{{ form.payment_method.label_tag }}{{ form.payment_method }}{{ form.payment_method.errors }}</div>
 
-      <div class="col-md-6">{{ form.amount_paid.label_tag }}{{ form.amount_paid }}</div>
-      <div class="col-md-6">{{ form.discount_amount.label_tag }}{{ form.discount_amount }}</div>
+      <div class="col-md-6">{{ form.amount_paid.label_tag }}{{ form.amount_paid }}{{ form.amount_paid.errors }}</div>
+      <div class="col-md-6">{{ form.discount_amount.label_tag }}{{ form.discount_amount }}{{ form.discount_amount.errors }}</div>
 
-      <div class="col-12">{{ form.notes.label_tag }}{{ form.notes }}</div>
+      <div class="col-12">{{ form.notes.label_tag }}{{ form.notes }}{{ form.notes.errors }}</div>
     </div>
 
     <hr class="my-3">
     {# ... formset de itens permanece igual ... #}
     {{ formset.management_form }}
+    {{ formset.non_form_errors }}
     <div class="table-responsive">
       <table class="table table-sm align-middle">
         <thead>
@@ -52,6 +55,9 @@
                   </label>
                 {% endif %}
               </td>
+            </tr>
+            <tr>
+              <td colspan="4">{{ f.errors }}</td>
             </tr>
           {% endfor %}
         </tbody>
