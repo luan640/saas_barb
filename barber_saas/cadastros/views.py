@@ -489,13 +489,13 @@ class ClientCreateView(OwnerCreateMixin, OwnerQuerysetMixin, CreateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["title"] = "Novo cliente"
+        ctx["refresh_event"] = "refreshClientsTable"
         return ctx
 
     def form_valid(self, form):
         self.object = form.save()
         resp = HttpResponse("")
-        # fecha modal e pede refresh da tabela
-        resp["HX-Trigger"] = '{"closeModal": true, "refreshClientsTable": true, "toast": "Cliente salvo."}'
+        resp["HX-Trigger"] = '{"toast": "Cliente salvo."}'
         return resp
 
 
@@ -507,12 +507,13 @@ class ClientUpdateView(OwnerUpdateMixin, OwnerQuerysetMixin, UpdateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["title"] = "Editar cliente"
+        ctx["refresh_event"] = "refreshClientsTable"
         return ctx
 
     def form_valid(self, form):
         self.object = form.save()
         resp = HttpResponse("")
-        resp["HX-Trigger"] = '{"closeModal": true, "refreshClientsTable": true, "toast": "Cliente atualizado."}'
+        resp["HX-Trigger"] = '{"toast": "Cliente atualizado."}'
         return resp
 
 
